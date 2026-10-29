@@ -52,6 +52,11 @@
             100% { transform: scale(1); }
         }
 
+        @keyframes fadeHadith {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -70,8 +75,8 @@
             position: fixed;
             top: 16px;
             left: 50%;
-            transform: translateX(-50%) translateY(-120%);
-            background: rgba(15, 23, 42, 0.95);
+            transform: translateX(-50%) translateY(-140%);
+            background: rgba(15, 23, 42, 0.96);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.15);
             color: #fff;
@@ -199,12 +204,74 @@
             transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
+        /* باکس حدیث روزانه */
+        .hadith-box {
+            margin: 14px 16px 4px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(251, 191, 36, 0.25);
+            border-right: 4px solid var(--accent-gold);
+            border-radius: 18px;
+            padding: 12px 14px;
+            position: relative;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+        }
+
+        .hadith-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .hadith-speaker {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hadith-refresh-btn {
+            background: rgba(255,255,255,0.06);
+            border: none;
+            color: var(--text-muted);
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .hadith-refresh-btn:active {
+            transform: rotate(180deg) scale(0.9);
+            color: var(--accent-gold);
+        }
+
+        .hadith-text {
+            font-size: 0.84rem;
+            line-height: 1.65;
+            color: var(--text-light);
+            animation: fadeHadith 0.35s ease;
+        }
+
+        .hadith-source {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-align: left;
+            margin-top: 4px;
+        }
+
         /* زبونه‌های ناوبری بالای صفحه */
         .main-tabs {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            margin: 16px 16px 4px;
+            margin: 12px 16px 4px;
             background: var(--bg-card);
             padding: 6px;
             border-radius: 16px;
@@ -236,7 +303,7 @@
         /* کارت‌ها */
         .card {
             background: var(--bg-card);
-            margin: 14px 16px;
+            margin: 12px 16px;
             padding: 16px;
             border-radius: 22px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.25);
@@ -312,13 +379,8 @@
             transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
         }
 
-        .day-tile:not(.empty):hover {
-            transform: translateY(-2px);
-        }
-
-        .day-tile:not(.empty):active {
-            transform: scale(0.92);
-        }
+        .day-tile:not(.empty):hover { transform: translateY(-2px); }
+        .day-tile:not(.empty):active { transform: scale(0.92); }
 
         .day-tile.empty {
             background: transparent;
@@ -354,7 +416,7 @@
             color: rgba(255,255,255,0.85);
         }
 
-        /* نمای اختصاصی ثبت روز (Day Detail View) */
+        /* نمای اختصاصی ثبت روز */
         .back-nav-bar {
             display: flex;
             justify-content: space-between;
@@ -651,7 +713,7 @@
             font-size: 0.76rem;
         }
 
-        /* دکمه شناور همگام‌سازی (Floating Action Button) */
+        /* دکمه شناور همگام‌سازی (FAB) */
         .fab-wrapper {
             position: fixed;
             bottom: 20px;
@@ -808,7 +870,17 @@
         </div>
     </div>
 
-    <!-- زبونه‌های ناوبری اصلی (مخفی هنگام ورود به صفحه روز) -->
+    <!-- باکس حدیث روزانه (کلام نور) -->
+    <div class="hadith-box" id="hadith-container">
+        <div class="hadith-header">
+            <span class="hadith-speaker" id="hadith-speaker">✨ کلام نور (حدیث روز)</span>
+            <button class="hadith-refresh-btn" onclick="nextHadith()" title="نمایش حدیثی دیگر">🔄</button>
+        </div>
+        <div class="hadith-text" id="hadith-text">در حال بارگذاری کلام نور...</div>
+        <div class="hadith-source" id="hadith-source"></div>
+    </div>
+
+    <!-- زبونه‌های ناوبری اصلی -->
     <div class="main-tabs" id="main-tabs-nav">
         <button class="main-tab-btn active" id="tab-btn-calendar" onclick="switchMainTab('calendar')">
             📅 تقویم اعمال
@@ -906,16 +978,13 @@
                 </div>
             </div>
 
-            <!-- بنر ضریب ۱.۵ برابر پنج‌شنبه و جمعه -->
             <div id="weekend-multiplier-banner" class="multiplier-banner" style="display: none;">
                 <span style="font-size: 1.1rem;">✨</span>
                 <span>فضیلت آخر هفته: تمام امتیازات مثبت این روز <b>۱.۵ برابر</b> محاسبه می‌شوند!</span>
             </div>
 
-            <!-- لیست ۵ نماز واجب -->
             <div id="prayers-container"></div>
 
-            <!-- نماز شب -->
             <div class="extra-row night-prayer-box" onclick="toggleExtra('nightPrayer')">
                 <div>
                     <div style="font-weight: 800; font-size: 0.92rem;">🌙 نماز شب</div>
@@ -924,7 +993,6 @@
                 <div class="custom-checkbox" id="chk-nightPrayer"></div>
             </div>
 
-            <!-- گناه کبیره -->
             <div class="extra-row sin-box" onclick="toggleExtra('majorSin')">
                 <div>
                     <div style="font-weight: 800; font-size: 0.92rem; color: #fca5a5;">⚠️ ثبت خطا / گناه بزرگ</div>
@@ -933,7 +1001,6 @@
                 <div class="custom-checkbox" id="chk-majorSin"></div>
             </div>
 
-            <!-- امتیاز شخصی از ۰ تا ۱۰ -->
             <div class="score-section">
                 <div class="score-header">
                     <span style="font-size: 0.88rem; font-weight: 800;">🎯 نمره رضایت شما از این روز:</span>
@@ -981,6 +1048,95 @@
     </div>
 
 <script>
+/* ==========================================
+   ۰. بانک احادیث (آنلاین + ۴۰ حدیث پشتیبان فشرده)
+   ========================================== */
+const FALLBACK_HADITHS = [
+    { s: "پیامبر اکرم (ص)", t: "نماز ستون دین است؛ اگر پذیرفته شود، سایر اعمال نیز پذیرفته می‌شود.", r: "بحارالأنوار" },
+    { s: "امام صادق (ع)", t: "محبوب‌ترین کارها نزد خداوند عزوجل، نماز در اول وقت آن است.", r: "کافی" },
+    { s: "امام علی (ع)", t: "هرگاه یکی از شما به نماز می‌ایستد، در واقع در برابر پروردگارش ایستاده است.", r: "نهج‌البلاغه" },
+    { s: "امام باقر (ع)", t: "نخستین چیزی که بنده در روز قیامت از آن محاسبه می‌شود، نماز است.", r: "وسائل‌الشیعه" },
+    { s: "امام صادق (ع)", t: "برتری نماز اول وقت بر آخر وقت، مانند برتری آخرت بر دنیاست.", r: "ثواب‌الأعمال" },
+    { s: "پیامبر اکرم (ص)", t: "دو رکعت نماز در دل شب، نزد من از دنیا و هرچه در آن است محبوب‌تر است.", r: "بحارالأنوار" },
+    { s: "امام رضا (ع)", t: "نماز، نزدیک‌ترین وسیله هر پرهیزکاری به سوی خداوند متعال است.", r: "خصال" },
+    { s: "امام صادق (ع)", t: "نماز شب صورت را نورانی، اخلاق را نیکو و روزی را جلب می‌کند.", r: "وسائل‌الشیعه" },
+    { s: "امام علی (ع)", t: "نماز را در وقتش بخوان و آن را برای زمان بیکاری‌ات به تأخیر مینداز.", r: "نهج‌البلاغه" },
+    { s: "پیامبر اکرم (ص)", t: "مَثَل نمازهای پنج‌گانه، مانند نهری جاری بر در خانه شماست که روزی پنج بار در آن شستشو می‌کنید.", r: "کنزالعمال" },
+    { s: "امام صادق (ع)", t: "شفاعت ما به کسی که نماز را سبک بشمارد نمی‌رسد.", r: "وسائل‌الشیعه" },
+    { s: "امام حسن عسکری (ع)", t: "رسیدن به خداوند، سفری است که جز با مرکب شب‌زنده‌داری به دست نمی‌آید.", r: "بحارالأنوار" },
+    { s: "امام سجاد (ع)", t: "حق نماز آن است که بدانی وارد حضور خداوند می‌شوی و در پیشگاه او ایستاده‌ای.", r: "رساله حقوق" },
+    { s: "پیامبر اکرم (ص)", t: "هر کس نماز صبح را به جماعت بخواند، در پناه خداوند است.", r: "ثواب‌الأعمال" },
+    { s: "امام علی (ع)", t: "خداوند متعال، ایمان را برای پاک شدن از شرک و نماز را برای دوری از کبر واجب فرمود.", r: "نهج‌البلاغه" },
+    { s: "امام صادق (ع)", t: "وقتی نماز واجب به پا می‌دارید، نمازی بخوانید همچون کسی که آخرین نماز عمرش را می‌خواند.", r: "کافی" },
+    { s: "امام کاظم (ع)", t: "حساب نفس خود را پیش از آنکه به حساب شما برسند، انجام دهید.", r: "تحف‌العقول" },
+    { s: "پیامبر اکرم (ص)", t: "در میان هر دو اذان (ظهر و عصر، مغرب و عشا) نمازی است، اما فضیلت از آنِ کسی است که اول وقت بخواند.", r: "مستدرک" },
+    { s: "امام جواد (ع)", t: "توسل به خدا را با نماز و صدقه، سپر بلاهای خود قرار دهید.", r: "بحارالأنوار" },
+    { s: "امام علی (ع)", t: "شیطان همواره از مرد مؤمن هراسان است، تا زمانی که بر نمازهای پنج‌گانه خود محافظت کند.", r: "غررالحکم" },
+    { s: "امام صادق (ع)", t: "شرف مؤمن به نماز شب اوست و عزت او به بی‌نیازی از مردم.", r: "کافی" },
+    { s: "پیامبر اکرم (ص)", t: "نور چشمان من در نماز قرار داده شده است.", r: "نهج‌الفصاحه" },
+    { s: "امام هادی (ع)", t: "کسی که از خدا پروا کند، مردم از او پروا و احترام خواهند کرد.", r: "تحف‌العقول" },
+    { s: "امام باقر (ع)", t: "هر اندازه از نمازت که با حضور قلب همراه باشد، همان مقدار از تو پذیرفته می‌شود.", r: "بحارالأنوار" },
+    { s: "امام مهدی (عج)", t: "هیچ چیزی مانند نماز، بینی شیطان را به خاک نمی‌مالد؛ پس نماز را به پا دار.", r: "احتجاج" },
+    { s: "امام علی (ع)", t: "خوشا به حال کسی که اخلاص در عبادت و دعایش را تنها برای خدا قرار دهد.", r: "غررالحکم" },
+    { s: "امام صادق (ع)", t: "سجده بر خاک، حجاب‌های هفت‌گانه را تا عرش الهی کنار می‌زند.", r: "من لایحضره الفقیه" },
+    { s: "پیامبر اکرم (ص)", t: "نزدیک‌ترین حالت بنده به پروردگارش، زمانی است که در سجده است.", r: "بحارالأنوار" },
+    { s: "امام رضا (ع)", t: "خوش‌خلقی و حسن ظن به خدا، دو بال ایمان هستند.", r: "عیون اخبارالرضا" },
+    { s: "امام حسین (ع)", t: "خدایا، اگر به خاطر ترس از عقاب یا طمع بهشت نبود، باز هم تو شایسته عبادت بودی.", r: "بحارالأنوار" },
+    { s: "امام علی (ع)", t: "توبه و استغفار، بوی خوش مؤمن و شستشودهنده دل از زنگار گناه است.", r: "نهج‌البلاغه" },
+    { s: "امام صادق (ع)", t: "خانه خود را با تلاوت قرآن و اقامه نماز، نورانی کنید.", r: "کافی" },
+    { s: "پیامبر اکرم (ص)", t: "یک نماز در مسجد، برتر از بیست‌وپنج نماز در خانه است.", r: "وسائل‌الشیعه" },
+    { s: "امام سجاد (ع)", t: "عجب دارم از کسی که از هلاکت می‌ترسد، اما به استغفار پناه نمی‌برد.", r: "بحارالأنوار" },
+    { s: "امام علی (ع)", t: "بهترین اعمال، کاری است که بر آن مداومت و استمرار بورزی، هرچند اندک باشد.", r: "غررالحکم" },
+    { s: "امام صادق (ع)", t: "در شب و روز جمعه، فرشتگان ثواب اعمال نیک را دوچندان می‌نویسند.", r: "ثواب‌الأعمال" },
+    { s: "پیامبر اکرم (ص)", t: "برترین جهاد، جهاد انسان با هوای نفس خویش است.", r: "امالی" },
+    { s: "امام کاظم (ع)", t: "اوقات خود را به چهار بخش تقسیم کنید: مناجات با خدا، تأمین معاش، معاشرت با برادران امین و تفریح حلال.", r: "تحف‌العقول" },
+    { s: "امام علی (ع)", t: "فرصت‌ها همچون ابر می‌گذرند؛ پس فرصت‌های خیر و عبادت را دریابید.", r: "نهج‌البلاغه" },
+    { s: "امام صادق (ع)", t: "هر کس پس از نماز صبح و مغرب هفت بار بگوید «بسم الله الرحمن الرحیم لا حول و لا قوة الا بالله»، هفتاد نوع بلا از او دفع شود.", r: "کافی" }
+];
+
+let hadithList = [...FALLBACK_HADITHS];
+let currentHadithIndex = 0;
+
+async function initDailyHadith() {
+    // تلاش برای دریافت بانک بزرگتر احادیث از فایل JSON آنلاین در کنار پروژه گیت‌هاب
+    try {
+        const res = await fetch('./hadiths.json', { cache: 'no-cache' });
+        if (res.ok) {
+            const remoteData = await res.json();
+            if (Array.isArray(remoteData) && remoteData.length > 0) {
+                hadithList = [...remoteData, ...FALLBACK_HADITHS];
+            }
+        }
+    } catch (_) {
+        // اگر فایل آنلاین نبود، بدون هیچ خطایی از همان ۴۰ حدیث داخلی استفاده می‌کند
+    }
+
+    // محاسبه عدد یکتای روز سال برای انتخاب غیرتکراری
+    const startOfYear = new Date(new Date().getFullYear(), 0, 0);
+    const diff = new Date() - startOfYear;
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    currentHadithIndex = dayOfYear % hadithList.length;
+    displayHadith(currentHadithIndex);
+}
+
+function displayHadith(idx) {
+    const item = hadithList[idx];
+    const textEl = document.getElementById('hadith-text');
+    textEl.style.animation = 'none';
+    void textEl.offsetWidth; // ریست انیمیشن
+    textEl.style.animation = 'fadeHadith 0.35s ease';
+
+    document.getElementById('hadith-speaker').innerText = `✨ ${item.s}:`;
+    textEl.innerText = `«${item.t}»`;
+    document.getElementById('hadith-source').innerText = item.r ? `📚 ${item.r}` : '';
+}
+
+function nextHadith() {
+    currentHadithIndex = (currentHadithIndex + 1) % hadithList.length;
+    displayHadith(currentHadithIndex);
+}
+
 /* ==========================================
    ۱. توابع تقویم جلالی (شمسی) و بررسی روز هفته
    ========================================== */
@@ -1035,7 +1191,6 @@ function formatKey(jy, jm, jd) {
     return `${jy}-${String(jm).padStart(2, '0')}-${String(jd).padStart(2, '0')}`;
 }
 
-// خروجی روز هفته شمسی: 0=شنبه ... 5=پنجشنبه، 6=جمعه
 function getJalaliWeekday(dateKey) {
     const [jy, jm, jd] = dateKey.split('-').map(Number);
     const [gy, gm, gd] = jalaliToGregorian(jy, jm, jd);
@@ -1045,7 +1200,7 @@ function getJalaliWeekday(dateKey) {
 
 function isWeekendBonusDay(dateKey) {
     const wd = getJalaliWeekday(dateKey);
-    return wd === 5 || wd === 6; // پنج‌شنبه یا جمعه
+    return wd === 5 || wd === 6;
 }
 
 const JALALI_MONTHS = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
@@ -1070,7 +1225,7 @@ let currentViewJY = todayJY;
 let currentViewJM = todayJM;
 let selectedDateKey = todayKey;
 let currentReportPeriod = 7;
-let isDirty = false; // آیا در صفحه روز تغییری ایجاد شده که باید ذخیره شود؟
+let isDirty = false;
 
 let appData = JSON.parse(localStorage.getItem('mehrab_app_data') || '{}');
 let workerConfig = JSON.parse(localStorage.getItem('mehrab_worker_cfg') || 'null');
@@ -1113,7 +1268,7 @@ function getPrayerSingleXP(prayerKey, status, isAutoQaza) {
     if (status === 'ontime') return isFajr ? 35 : 20;
     if (status === 'late')   return isFajr ? 25 : 10;
     if (status === 'madeup') return isFajr ? 25 : 15;
-    if (status === 'qaza' || isAutoQaza) return isFajr ? -5 : -10; // جریمه کمتر برای نماز صبح
+    if (status === 'qaza' || isAutoQaza) return isFajr ? -5 : -10;
     return 0;
 }
 
@@ -1150,7 +1305,6 @@ function calculateDayXP(dateKey) {
     if (rec.score !== null) posXP += rec.score;
     if (rec.majorSin) negXP -= 30;
 
-    // اعمال ضریب ۱.۵ برابر برای امتیازهای مثبت پنج‌شنبه و جمعه
     const multiplier = isWeekendBonusDay(dateKey) ? 1.5 : 1;
     return Math.round(posXP * multiplier) + negXP;
 }
@@ -1208,6 +1362,7 @@ function updateGlobalGamification() {
    ========================================== */
 function switchMainTab(tabName) {
     document.getElementById('main-tabs-nav').style.display = 'grid';
+    document.getElementById('hadith-container').style.display = 'block';
     document.getElementById('view-day-detail').classList.remove('active');
 
     document.getElementById('tab-btn-calendar').classList.toggle('active', tabName === 'calendar');
@@ -1223,6 +1378,7 @@ function openDayDetail(dateKey) {
     selectedDateKey = dateKey;
     isDirty = false;
     document.getElementById('main-tabs-nav').style.display = 'none';
+    document.getElementById('hadith-container').style.display = 'none';
     document.getElementById('view-calendar').classList.remove('active');
     document.getElementById('view-report').classList.remove('active');
 
@@ -1234,7 +1390,6 @@ function openDayDetail(dateKey) {
 function returnToCalendarAndSync() {
     switchMainTab('calendar');
     renderCalendar();
-    // ذخیره خودکار در سرور هنگام برگشت از صفحه روز به تقویم
     if (isDirty) {
         syncWithCloud('save', true);
         isDirty = false;
@@ -1541,9 +1696,10 @@ async function syncWithCloud(mode, isAuto = false) {
     }
 }
 
-// اجرای اولیه و بازیابی خودکار از کلودفلر هنگام باز شدن برنامه
+// اجرای اولیه هنگام باز شدن برنامه
 window.addEventListener('DOMContentLoaded', () => {
     renderAll();
+    initDailyHadith();
     syncWithCloud('load', true);
 });
 </script>
